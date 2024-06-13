@@ -39,7 +39,7 @@ function App:event(name, ...)
     end
     local handle = program.events[name]
     if handle then
-        return handle(program, ...)
+        return handle(self, ...)
     elseif name == "terminate" then
         error "Terminated"
     end
@@ -52,10 +52,10 @@ function App:run(program)
     local program = self:program()
     while program do
         if program.update then
-            program:update()
+            program.update(self)
         end
         if program.draw then
-            program:draw()
+            program.draw(self)
         end
         ---@diagnostic disable-next-line: undefined-field
         self:event(os.pullEventRaw())
@@ -70,9 +70,9 @@ Program = {
     }
 }
 function Program.new(opts)
-    ---@alias UpdateMethod fun(self: Program)
-    ---@alias DrawMethod fun(self: Program)
-    ---@alias EventHandle fun(self: Program, ...)
+    ---@alias UpdateMethod fun(app: App)
+    ---@alias DrawMethod fun(app: App)
+    ---@alias EventHandle fun(app: App, ...)
     ---@class Program : { update: UpdateMethod?, draw: DrawMethod?, events: table<string, EventHandle> }
     return setmetatable({
         update = opts.update,
