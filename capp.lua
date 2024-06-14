@@ -12,6 +12,7 @@ function App.new()
         call = App.call,
         exit = App.exit,
         program = App.program,
+        event = App.event,
         run = App.run,
     }, App.meta)
 end
@@ -31,7 +32,6 @@ function App:program()
     return self.stack[#self.stack]
 end
 ---@param self App
----@return Program?
 function App:event(name, ...)
     local program = self:program()
     if not program then
@@ -39,9 +39,12 @@ function App:event(name, ...)
     end
     local handle = program.events[name]
     if handle then
-        return handle(self, ...)
+        local ret = handle(self, ...)
+        return type(ret) == "nil" and true or ret
     elseif name == "terminate" then
         error "Terminated"
+    else
+        return false
     end
 end
 ---@param self App
@@ -58,7 +61,7 @@ function App:run(program)
             program.draw(self)
         end
         ---@diagnostic disable-next-line: undefined-field
-        self:event(os.pullEventRaw())
+        while not self:event(os.pullEventRaw()) do end
         program = self:program()
     end
 end
@@ -78,6 +81,7 @@ function Program.new(opts)
         update = opts.update,
         draw = opts.draw,
         events = opts.events or {},
+        event = Program.event,
     }, Program.meta)
 end
 
